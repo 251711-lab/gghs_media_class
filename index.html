@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 NASA 오늘의 우주 사진 (APOD)</title>
+    <style>
+        /* 기본 스타일 초기화 및 테마 설정 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #0b0d17 0%, #171b34 50%, #080a12 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        /* 상단 날짜 선택 패널 */
+        .control-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.25rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .control-panel label {
+            font-weight: 600;
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+
+        .control-panel input[type="date"] {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .control-panel input[type="date"]:focus {
+            border-color: #6366f1;
+        }
+
+        /* 하단 메인 콘텐츠 카드 */
+        .content-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        /* 우주 사진 미디어 컨테이너 */
+        .media-container {
+            width: 100%;
+            background-color: #000;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .media-container img, .media-container iframe {
+            width: 100%;
+            max-height: 600px;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* 텍스트 정보 및 상세 설명 */
+        .card-body {
+            padding: 2rem;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .date-badge {
+            background-color: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .copyright-tag {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .card-title {
+            font-size: 1.75rem;
+            color: #f8fafc;
+            margin-bottom: 1.25rem;
+            line-height: 1.3;
+        }
+
+        .card-explanation {
+            color: #cbd5e1;
+            line-height: 1.7;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            white-space: pre-line;
+        }
+
+        /* 고해상도 버튼 */
+        .btn-hd {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-hd:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* 로딩 스피너 및 오류 메시지 */
+        .status-message {
+            text-align: center;
+            padding: 3rem;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌌 NASA Astronomy Picture of the Day</h1>
+        <p>원하는 날짜를 선택하여 나사가 선정한 우주 사진을 감상해 보세요.</p>
+    </header>
+
+    <!-- 상단: 날짜 선택 영역 -->
+    <section class="control-panel">
+        <label for="apodDate">날짜 선택:</label>
+        <input type="date" id="apodDate" name="apodDate">
+    </section>
+
+    <!-- 상태 표시 영역 (로딩 스피너 및 에러) -->
+    <div id="statusMessage" class="status-message">
+        <div class="spinner"></div>
+        <p>우주 데이터를 불러오는 중입니다...</p>
+    </div>
+
+    <!-- 하단: 이미지 및 상세 정보 카드 -->
+    <main id="contentCard" class="content-card">
+        <div class="media-container" id="mediaContainer">
+            <!-- 우주 이미지/영상 동적 삽입 -->
+        </div>
+
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date-badge" id="photoDate"></span>
+                <span class="copyright-tag" id="photoCopyright"></span>
+            </div>
+
+            <h2 class="card-title" id="photoTitle"></h2>
+            <p class="card-explanation" id="photoExplanation"></p>
+
+            <div id="hdBtnWrapper">
+                <a id="photoHdUrl" href="#" target="_blank" class="btn-hd">
+                    🔍 고해상도(HD) 이미지 원본 보기
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const dateInput = document.getElementById('apodDate');
+        const statusMessage = document.getElementById('statusMessage');
+        const contentCard = document.getElementById('contentCard');
+
+        const mediaContainer = document.getElementById('mediaContainer');
+        const photoDate = document.getElementById('photoDate');
+        const photoCopyright = document.getElementById('photoCopyright');
+        const photoTitle = document.getElementById('photoTitle');
+        const photoExplanation = document.getElementById('photoExplanation');
+        const photoHdUrl = document.getElementById('photoHdUrl');
+        const hdBtnWrapper = document.getElementById('hdBtnWrapper');
+
+        // 발급받으신 사용자 API Key 적용
+        const apiKey = 'hG7nJxamc8faysWgTUsVCKMqnfpiEi61gDAka7hj';
+
+        // 오늘 날짜 구하기 (YYYY-MM-DD)
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.max = today; // 미래 날짜 선택 방지
+        dateInput.value = today; // 기본 선택일: 오늘
+
+        // NASA APOD API 데이터 조회 함수
+        async function fetchApodData(selectedDate) {
+            statusMessage.style.display = 'block';
+            contentCard.style.display = 'none';
+            statusMessage.innerHTML = `
+                <div class="spinner"></div>
+                <p><strong>${selectedDate}</strong> 날짜의 우주 데이터를 불러오는 중입니다...</p>
+            `;
+
+            const apiUrl = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${selectedDate}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`API 요청 실패 (상태 코드: ${response.status})`);
+                }
+                const data = await response.json();
+                renderApodData(data);
+            } catch (error) {
+                console.error(error);
+                statusMessage.innerHTML = `
+                    <p style="color: #ef4444;">⚠️ 데이터를 불러오는데 실패했습니다.<br>
+                    <small>(${error.message})</small></p>
+                `;
+            }
+        }
+
+        // 화면 렌더링 함수
+        function renderApodData(data) {
+            photoDate.textContent = data.date;
+            photoTitle.textContent = data.title;
+            photoExplanation.textContent = data.explanation;
+
+            // 저작권자 정보 처리
+            if (data.copyright) {
+                photoCopyright.textContent = `© ${data.copyright.trim()}`;
+            } else if (data.credit) {
+                photoCopyright.textContent = `Credit: ${data.credit.trim()}`;
+            } else {
+                photoCopyright.textContent = 'Public Domain / NASA';
+            }
+
+            // 미디어 타입 구분 (이미지 vs 영상)
+            mediaContainer.innerHTML = '';
+            if (data.media_type === 'image') {
+                const img = document.createElement('img');
+                img.src = data.url;
+                img.alt = data.title;
+                mediaContainer.appendChild(img);
+
+                // 고해상도(HD) 링크
+                photoHdUrl.href = data.hdurl || data.url;
+                hdBtnWrapper.style.display = 'block';
+            } else if (data.media_type === 'video') {
+                const iframe = document.createElement('iframe');
+                iframe.src = data.url;
+                iframe.frameBorder = '0';
+                iframe.allowFullscreen = true;
+                iframe.style.width = '100%';
+                iframe.style.height = '450px';
+                mediaContainer.appendChild(iframe);
+
+                hdBtnWrapper.style.display = 'none';
+            }
+
+            statusMessage.style.display = 'none';
+            contentCard.style.display = 'block';
+        }
+
+        // 날짜 변경 시 자동 호출
+        dateInput.addEventListener('change', (e) => {
+            if (e.target.value) {
+                fetchApodData(e.target.value);
+            }
+        });
+
+        // 페이지 로드 시 오늘 데이터 조회
+        fetchApodData(dateInput.value);
+    </script>
+</body>
+</html>
